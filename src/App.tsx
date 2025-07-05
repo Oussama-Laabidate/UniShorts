@@ -3,18 +3,20 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import Explore from "./pages/Explore";
-import UserProfile from "./pages/UserProfile";
-import Settings from "./pages/Settings";
-import FilmDetails from "./pages/FilmDetails";
-import SearchResults from "./pages/SearchResults";
-import Contact from "./pages/Contact";
-import About from "./pages/About";
-import { AuthProvider } from "./context/AuthContext";
+import Index from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import Explore from "@/pages/Explore";
+import UserProfile from "@/pages/UserProfile";
+import Settings from "@/pages/Settings";
+import FilmDetails from "@/pages/FilmDetails";
+import SearchResults from "@/pages/SearchResults";
+import Contact from "@/pages/Contact";
+import About from "@/pages/About";
+import { AuthProvider } from "@/context/AuthContext";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +28,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
@@ -36,7 +39,13 @@ const App = () => (
             <Route path="/search" element={<SearchResults />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="dashboard" element={<AdminDashboard />} />
+            </Route>
+
+            {/* Catch-all Not Found Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
