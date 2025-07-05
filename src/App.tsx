@@ -18,6 +18,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
+import AdminFilms from "./pages/admin/Films";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="films" element={<AdminFilms />} />
             </Route>
 
             {/* Catch-all Not Found Route */}
