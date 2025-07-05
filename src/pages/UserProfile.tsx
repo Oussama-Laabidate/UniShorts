@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { Separator } from '@/components/ui/separator';
-import { User, Film, History, Star, Settings, Trash2 } from 'lucide-react';
+import { User, Film, History, Star, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Profile = {
@@ -136,18 +136,10 @@ const UserProfile = () => {
                 <CardTitle className="flex items-center"><Settings className="w-5 h-5 mr-2" />Settings</CardTitle>
                 <CardDescription>Manage your account preferences and more.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <Button asChild>
                   <Link to="/settings">Go to Settings</Link>
                 </Button>
-                <Separator />
-                <Button variant="destructive" className="w-full md:w-auto">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Account
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
               </CardContent>
             </Card>
           </div>
