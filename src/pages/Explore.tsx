@@ -24,6 +24,7 @@ const categories = [
   "Animation",
   "Experimental",
   "Horror",
+  "Student Projects",
 ];
 
 const Explore = () => {
@@ -67,7 +68,7 @@ const Explore = () => {
 
         <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
           <div className="flex justify-center mb-6">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 w-full max-w-3xl">
+            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 w-full max-w-5xl">
               {categories.map((category) => (
                 <TabsTrigger key={category} value={category}>
                   {category}
