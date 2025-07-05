@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { Separator } from '@/components/ui/separator';
-import { Film, Star, Clock, Settings, Trash2, X } from 'lucide-react';
+import { Film, Star, Clock, Settings, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -169,7 +169,7 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
 };
 
 const UserProfile = () => {
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -180,28 +180,45 @@ const UserProfile = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') { // Ignore 'exact one row not found' error
+        throw error;
+      }
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
       showError('Could not load profile.');
+      setProfile(null);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    if (!session && !loading) {
+    if (!authLoading && !session) {
       navigate('/login');
     } else if (session) {
       fetchProfile();
     }
-  }, [session, loading, navigate, fetchProfile]);
+  }, [session, authLoading, navigate, fetchProfile]);
 
   const getInitials = (firstName: string, lastName: string) => `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 
-  if (loading || !profile || !user) {
+  if (authLoading || loading) {
     return <SkeletonLayout />;
+  }
+
+  if (!profile || !user) {
+    return (
+      <div className="flex flex-col min-h-dvh bg-background">
+        <Header />
+        <main className="flex-1 container py-8 md:py-12 text-center">
+          <h1 className="text-2xl font-bold">Could not load profile</h1>
+          <p className="text-muted-foreground mt-2">There was an error fetching your profile data. This can happen if your account is new and the profile hasn't been created yet.</p>
+          <Button onClick={fetchProfile} className="mt-4">Try Again</Button>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
