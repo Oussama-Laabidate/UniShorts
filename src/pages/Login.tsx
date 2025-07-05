@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Login = () => {
   const { session } = useAuth();
@@ -42,7 +41,6 @@ const Login = () => {
             }
           }}
           providers={[]}
-          theme="dark"
           view="sign_in"
         />
       </div>
