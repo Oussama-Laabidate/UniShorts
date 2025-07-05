@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Film } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { UserNav } from "./UserNav";
 
 export const Header = () => {
-  const { session, signOut, loading } = useAuth();
+  const { session, loading } = useAuth();
 
   return (
     <header className="w-full px-4 lg:px-6 h-14 flex items-center bg-background border-b">
@@ -16,14 +17,7 @@ export const Header = () => {
         {!loading && (
           <>
             {session ? (
-              <>
-                <span className="text-sm text-muted-foreground hidden sm:inline">
-                  {session.user.email}
-                </span>
-                <Button variant="ghost" onClick={signOut}>
-                  Logout
-                </Button>
-              </>
+              <UserNav />
             ) : (
               <>
                 <Button variant="ghost" asChild>
