@@ -61,7 +61,7 @@ const AdminDashboard = () => {
                 <CardContent className="flex flex-wrap gap-4">
                   <Button asChild><Link to="#">Manage Films</Link></Button>
                   <Button asChild variant="secondary"><Link to="#">Moderate Comments</Link></Button>
-                  <Button asChild variant="secondary"><Link to="#">Manage Users</Link></Button>
+                  <Button asChild variant="secondary"><Link to="/admin/users">Manage Users</Link></Button>
                   <Button asChild variant="secondary"><Link to="#">View Analytics</Link></Button>
                 </CardContent>
               </Card>
