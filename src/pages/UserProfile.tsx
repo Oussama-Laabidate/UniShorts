@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -134,10 +134,13 @@ const UserProfile = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center"><Settings className="w-5 h-5 mr-2" />Settings</CardTitle>
-                <CardDescription>Manage your account settings.</CardDescription>
+                <CardDescription>Manage your account preferences and more.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Dark mode toggle can be implemented here */}
+                <Button asChild>
+                  <Link to="/settings">Go to Settings</Link>
+                </Button>
+                <Separator />
                 <Button variant="destructive" className="w-full md:w-auto">
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete Account
