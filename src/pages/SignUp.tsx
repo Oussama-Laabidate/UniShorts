@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { showError, showSuccess } from "@/utils/toast";
@@ -21,6 +22,8 @@ const SignUp = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [bio, setBio] = useState("");
+  const [fieldOfStudy, setFieldOfStudy] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,6 +34,12 @@ const SignUp = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.endsWith('.edu')) {
+      showError("Please use a valid university email address ending in .edu");
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -39,6 +48,8 @@ const SignUp = () => {
         data: {
           first_name: firstName,
           last_name: lastName,
+          bio: bio,
+          field_of_study: fieldOfStudy,
         },
       },
     });
@@ -46,7 +57,8 @@ const SignUp = () => {
     if (error) {
       showError(error.message);
     } else {
-      showSuccess("Check your email for the confirmation link!");
+      showSuccess("Check your email for the confirmation link! Your account will be reviewed after confirmation.");
+      // Reset form or navigate away
     }
     setLoading(false);
   };
@@ -56,8 +68,8 @@ const SignUp = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-dvh bg-background">
-      <Card className="mx-auto max-w-sm">
+    <div className="flex items-center justify-center min-h-dvh bg-background py-12">
+      <Card className="mx-auto max-w-lg w-full">
         <CardHeader>
           <CardTitle className="text-xl">Sign Up</CardTitle>
           <CardDescription>
@@ -91,6 +103,14 @@ const SignUp = () => {
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="field-of-study">Field of Study</Label>
+                <Input id="field-of-study" placeholder="e.g., Film Production, Animation" required value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="bio">Short Bio</Label>
+                <Textarea id="bio" placeholder="Tell us a little about yourself and your passion for filmmaking." required value={bio} onChange={(e) => setBio(e.target.value)} />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Creating account...' : 'Create an account'}
