@@ -8,6 +8,9 @@ export const Footer = () => {
         &copy; {new Date().getFullYear()} Laabidate Films. All rights reserved.
       </p>
       <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+        <Link to="/about" className="text-xs hover:underline underline-offset-4">
+          About Us
+        </Link>
         <Link to="#" className="text-xs hover:underline underline-offset-4">
           Terms of Service
         </Link>

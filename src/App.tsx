@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import FilmDetails from "./pages/FilmDetails";
 import SearchResults from "./pages/SearchResults";
 import Contact from "./pages/Contact";
+import About from "./pages/About";
 import { AuthProvider } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/films/:id" element={<FilmDetails />} />
             <Route path="/search" element={<SearchResults />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
