@@ -82,14 +82,22 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
-    const [sortColumn, sortDirection] = sort.split('-');
+    const [sortField, sortDirection] = sort.split('-');
     const isAscending = sortDirection === 'asc';
 
-    const { data, error } = await supabase
+    let query = supabase
       .from(listType)
       .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, genre)')
-      .eq('user_id', user.id)
-      .order(sortColumn, { foreignTable: sortColumn.includes('.') ? undefined : 'film', ascending: isAscending });
+      .eq('user_id', user.id);
+
+    if (sortField.startsWith('films.')) {
+      const foreignColumn = sortField.split('.')[1];
+      query = query.order(foreignColumn, { foreignTable: 'films', ascending: isAscending });
+    } else {
+      query = query.order(sortField, { ascending: isAscending });
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       showError(`Failed to load ${listType.replace('_', ' ')} list.`);
