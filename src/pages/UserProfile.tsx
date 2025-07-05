@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditProfileDialog } from '@/components/EditProfileDialog';
 import { Separator } from '@/components/ui/separator';
-import { User, Film, History, Star, Settings } from 'lucide-react';
+import { Film, Star, Clock, Settings, Trash2, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { showError, showSuccess } from '@/utils/toast';
+import { User as AuthUser } from '@supabase/supabase-js';
 
 type Profile = {
   first_name: string;
@@ -20,6 +24,142 @@ type Profile = {
   profile_picture_url: string;
 };
 
+type Film = {
+  id: string;
+  title: string;
+  synopsis: string;
+  thumbnail_url: string;
+  duration_seconds: number;
+  genre: string;
+};
+
+type ListItem = {
+  created_at: string;
+  film: Film;
+};
+
+const FilmListItem = ({ item, onRemove, showMarkAsWatched }: { item: ListItem, onRemove: (filmId: string) => void, showMarkAsWatched?: boolean }) => {
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return 'N/A';
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} min`;
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="relative">
+        <Link to={`/films/${item.film.id}`} className="block">
+          <div className="aspect-video bg-muted">
+            <img src={item.film.thumbnail_url || 'https://placehold.co/600x400?text=No+Image'} alt={item.film.title} className="w-full h-full object-cover" />
+          </div>
+        </Link>
+        <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => onRemove(item.film.id)}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      <CardHeader>
+        <CardTitle className="truncate text-lg">{item.film.title}</CardTitle>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="w-4 h-4" />
+          <span>{formatDuration(item.film.duration_seconds)}</span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {showMarkAsWatched && (
+          <Button variant="secondary" className="w-full" onClick={() => onRemove(item.film.id)}>
+            Mark as Watched
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 'watch_later' }) => {
+  const [items, setItems] = useState<ListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState('created_at-desc');
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    const [sortColumn, sortDirection] = sort.split('-');
+    const isAscending = sortDirection === 'asc';
+
+    const { data, error } = await supabase
+      .from(listType)
+      .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, genre)')
+      .eq('user_id', user.id)
+      .order(sortColumn, { foreignTable: sortColumn.includes('.') ? undefined : 'film', ascending: isAscending });
+
+    if (error) {
+      showError(`Failed to load ${listType.replace('_', ' ')} list.`);
+      console.error(error);
+    } else {
+      setItems(data as any);
+    }
+    setLoading(false);
+  }, [user, listType, sort]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const handleRemove = async (filmId: string) => {
+    const { error } = await supabase
+      .from(listType)
+      .delete()
+      .match({ user_id: user.id, film_id: filmId });
+
+    if (error) {
+      showError('Failed to remove film from list.');
+    } else {
+      showSuccess('Film removed from list.');
+      fetchItems();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">{items.length} film{items.length !== 1 && 's'}</p>
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Sort by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="created_at-desc">Date Added (Newest)</SelectItem>
+            <SelectItem value="created_at-asc">Date Added (Oldest)</SelectItem>
+            <SelectItem value="films.duration_seconds-desc">Duration (Longest)</SelectItem>
+            <SelectItem value="films.duration_seconds-asc">Duration (Shortest)</SelectItem>
+            <SelectItem value="films.genre-asc">Genre (A-Z)</SelectItem>
+            <SelectItem value="films.genre-desc">Genre (Z-A)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {items.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {items.map(item => (
+            <FilmListItem key={item.film.id} item={item} onRemove={handleRemove} showMarkAsWatched={listType === 'watch_later'} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center text-muted-foreground py-12 bg-card rounded-lg">
+          <p className="text-lg font-semibold">This list is empty</p>
+          <p>Explore films and add some to your {listType.replace('_', ' ')} list!</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const UserProfile = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
@@ -27,46 +167,33 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!session) {
-      navigate('/login');
-    }
-  }, [session, navigate]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-      } else {
-        setProfile(data);
-      }
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      showError('Could not load profile.');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProfile();
   }, [user]);
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
-  };
+  useEffect(() => {
+    if (!session && !loading) {
+      navigate('/login');
+    } else if (session) {
+      fetchProfile();
+    }
+  }, [session, loading, navigate, fetchProfile]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const getInitials = (firstName: string, lastName: string) => `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 
-  if (!profile || !user) {
-    return <div>Could not load profile.</div>;
+  if (loading || !profile || !user) {
+    return <SkeletonLayout />;
   }
 
   return (
@@ -91,69 +218,55 @@ const UserProfile = () => {
             <Tabs defaultValue="films" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="films"><Film className="w-4 h-4 mr-2" />My Films</TabsTrigger>
-                <TabsTrigger value="history"><History className="w-4 h-4 mr-2" />Watch History</TabsTrigger>
                 <TabsTrigger value="favorites"><Star className="w-4 h-4 mr-2" />Favorites</TabsTrigger>
+                <TabsTrigger value="watch_later"><Clock className="w-4 h-4 mr-2" />Watch Later</TabsTrigger>
               </TabsList>
               <TabsContent value="films" className="mt-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>My Films</CardTitle>
-                    <CardDescription>A collection of your uploaded short films.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center text-muted-foreground py-12">
-                    <p>You haven't uploaded any films yet.</p>
-                  </CardContent>
+                  <CardHeader><CardTitle>My Films</CardTitle><CardDescription>A collection of your uploaded short films.</CardDescription></CardHeader>
+                  <CardContent className="text-center text-muted-foreground py-12"><p>You haven't uploaded any films yet.</p></CardContent>
                 </Card>
               </TabsContent>
-              <TabsContent value="history" className="mt-6">
-                 <Card>
-                  <CardHeader>
-                    <CardTitle>Watch History</CardTitle>
-                    <CardDescription>Films you've recently watched.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center text-muted-foreground py-12">
-                    <p>Your watch history is empty.</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="favorites" className="mt-6">
-                 <Card>
-                  <CardHeader>
-                    <CardTitle>Favorites</CardTitle>
-                    <CardDescription>Films you've saved to watch later.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center text-muted-foreground py-12">
-                    <p>You haven't favorited any films yet.</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              <TabsContent value="favorites" className="mt-6"><FilmList user={user} listType="favorites" /></TabsContent>
+              <TabsContent value="watch_later" className="mt-6"><FilmList user={user} listType="watch_later" /></TabsContent>
             </Tabs>
-
             <Separator className="my-8" />
-
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center"><Settings className="w-5 h-5 mr-2" />Settings</CardTitle>
-                <CardDescription>Manage your account preferences and more.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild>
-                  <Link to="/settings">Go to Settings</Link>
-                </Button>
-              </CardContent>
+              <CardHeader><CardTitle className="flex items-center"><Settings className="w-5 h-5 mr-2" />Settings</CardTitle><CardDescription>Manage your account preferences and more.</CardDescription></CardHeader>
+              <CardContent><Button asChild><Link to="/settings">Go to Settings</Link></Button></CardContent>
             </Card>
           </div>
         </div>
       </main>
       <Footer />
-      <EditProfileDialog
-        isOpen={isEditDialogOpen}
-        setIsOpen={setIsEditDialogOpen}
-        profile={profile}
-        onProfileUpdate={fetchProfile}
-      />
+      <EditProfileDialog isOpen={isEditDialogOpen} setIsOpen={setIsEditDialogOpen} profile={profile} onProfileUpdate={fetchProfile} />
     </div>
   );
 };
+
+const SkeletonLayout = () => (
+    <div className="flex flex-col min-h-dvh bg-background">
+        <Header />
+        <main className="flex-1 container py-8 md:py-12">
+            <div className="grid gap-10 md:grid-cols-[280px_1fr]">
+                <div className="flex flex-col gap-6 items-center md:items-start">
+                    <Skeleton className="w-32 h-32 rounded-full" />
+                    <div className="space-y-2 text-center md:text-left">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-5 w-64" />
+                        <Skeleton className="h-5 w-40" />
+                    </div>
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-80 w-full" />
+                </div>
+            </div>
+        </main>
+        <Footer />
+    </div>
+);
 
 export default UserProfile;
