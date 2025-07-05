@@ -11,6 +11,7 @@ import Explore from "./pages/Explore";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
 import FilmDetails from "./pages/FilmDetails";
+import SearchResults from "./pages/SearchResults";
 import { AuthProvider } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/films/:id" element={<FilmDetails />} />
+            <Route path="/search" element={<SearchResults />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
