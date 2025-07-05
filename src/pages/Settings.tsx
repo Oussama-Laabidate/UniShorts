@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '@/components/theme-provider';
 import { useNavigate } from 'react-router-dom';
@@ -24,8 +24,17 @@ type SettingsData = {
   allow_comments: boolean;
 };
 
+const settingLabels: Record<string, string> = {
+  language: 'Language preference',
+  notifications_new_film: 'New film notifications',
+  notifications_comment_replies: 'Comment reply notifications',
+  notifications_platform_announcements: 'Platform announcements',
+  profile_public: 'Profile visibility',
+  allow_comments: 'Comment permissions',
+};
+
 const Settings = () => {
-  const { user, session, signOut } = useAuth();
+  const { user, session, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Partial<SettingsData>>({});
@@ -34,32 +43,50 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      if (!user) return;
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('language, notifications_new_film, notifications_comment_replies, notifications_platform_announcements, profile_public, allow_comments')
-        .eq('id', user.id)
-        .single();
+  const fetchSettings = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('language, notifications_new_film, notifications_comment_replies, notifications_platform_announcements, profile_public, allow_comments')
+      .eq('id', user.id)
+      .single();
 
-      if (error) {
-        showError('Failed to load settings.');
-      } else if (data) {
-        setSettings(data);
-      }
-      setLoading(false);
-    };
-
-    fetchSettings();
+    if (error) {
+      showError('Failed to load settings.');
+    } else if (data) {
+      setSettings(data);
+    }
+    setLoading(false);
   }, [user]);
 
-  const handleSaveChanges = async () => {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    } else if (user) {
+      fetchSettings();
+    }
+  }, [user, authLoading, navigate, fetchSettings]);
+
+  const handleSettingChange = async (update: Partial<SettingsData>) => {
     if (!user) return;
-    const { error } = await supabase.from('profiles').update(settings).eq('id', user.id);
-    if (error) showError('Failed to save settings.');
-    else showSuccess('Settings saved successfully!');
+
+    const key = Object.keys(update)[0];
+    const settingName = settingLabels[key] || 'Setting';
+    const toastId = showLoading('Saving...');
+
+    setSettings(s => ({ ...s, ...update }));
+
+    const { error } = await supabase.from('profiles').update(update).eq('id', user.id);
+    
+    dismissToast(toastId);
+
+    if (error) {
+      showError(`Failed to update ${settingName.toLowerCase()}.`);
+      fetchSettings(); // Revert UI on error
+    } else {
+      showSuccess(`${settingName} updated.`);
+    }
   };
 
   const handleUpdateEmail = async () => {
@@ -74,6 +101,10 @@ const Settings = () => {
       showError('Passwords do not match.');
       return;
     }
+    if (!newPassword) {
+      showError('Password cannot be empty.');
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) showError(error.message);
     else showSuccess('Password updated successfully.');
@@ -83,9 +114,7 @@ const Settings = () => {
     if (!session) return;
     try {
       const response = await supabase.functions.invoke('delete-user', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (response.error) throw response.error;
       showSuccess('Account deleted successfully.');
@@ -96,7 +125,7 @@ const Settings = () => {
     }
   };
 
-  if (loading) return <SkeletonLayout />;
+  if (loading || authLoading) return <SkeletonLayout />;
 
   return (
     <div className="flex flex-col min-h-dvh bg-background">
@@ -108,7 +137,7 @@ const Settings = () => {
           <Card>
             <CardHeader><CardTitle>Appearance</CardTitle><CardDescription>Customize the look and feel of the platform.</CardDescription></CardHeader>
             <CardContent>
-              <RadioGroup value={theme} onValueChange={setTheme}>
+              <RadioGroup value={theme} onValueChange={setTheme} className="flex flex-col sm:flex-row gap-4">
                 <div className="flex items-center space-x-2"><RadioGroupItem value="light" id="theme-light" /><Label htmlFor="theme-light">Light</Label></div>
                 <div className="flex items-center space-x-2"><RadioGroupItem value="dark" id="theme-dark" /><Label htmlFor="theme-dark">Dark</Label></div>
                 <div className="flex items-center space-x-2"><RadioGroupItem value="system" id="theme-system" /><Label htmlFor="theme-system">System</Label></div>
@@ -119,7 +148,7 @@ const Settings = () => {
           <Card>
             <CardHeader><CardTitle>Language</CardTitle><CardDescription>Choose your preferred language.</CardDescription></CardHeader>
             <CardContent>
-              <RadioGroup value={settings.language} onValueChange={(value) => setSettings(s => ({ ...s, language: value }))}>
+              <RadioGroup value={settings.language} onValueChange={(value) => handleSettingChange({ language: value })} className="flex flex-col sm:flex-row gap-4">
                 <div className="flex items-center space-x-2"><RadioGroupItem value="en" id="lang-en" /><Label htmlFor="lang-en">English</Label></div>
                 <div className="flex items-center space-x-2"><RadioGroupItem value="fr" id="lang-fr" /><Label htmlFor="lang-fr">French</Label></div>
                 <div className="flex items-center space-x-2"><RadioGroupItem value="ar" id="lang-ar" /><Label htmlFor="lang-ar">Arabic</Label></div>
@@ -130,23 +159,19 @@ const Settings = () => {
           <Card>
             <CardHeader><CardTitle>Notifications</CardTitle><CardDescription>Manage how you receive notifications.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between"><Label htmlFor="notif-new-film">New film uploads</Label><Switch id="notif-new-film" checked={settings.notifications_new_film} onCheckedChange={(c) => setSettings(s => ({ ...s, notifications_new_film: c }))} /></div>
-              <div className="flex items-center justify-between"><Label htmlFor="notif-replies">Replies to comments</Label><Switch id="notif-replies" checked={settings.notifications_comment_replies} onCheckedChange={(c) => setSettings(s => ({ ...s, notifications_comment_replies: c }))} /></div>
-              <div className="flex items-center justify-between"><Label htmlFor="notif-announcements">Platform announcements</Label><Switch id="notif-announcements" checked={settings.notifications_platform_announcements} onCheckedChange={(c) => setSettings(s => ({ ...s, notifications_platform_announcements: c }))} /></div>
+              <div className="flex items-center justify-between"><Label htmlFor="notif-new-film">New film uploads</Label><Switch id="notif-new-film" checked={settings.notifications_new_film} onCheckedChange={(c) => handleSettingChange({ notifications_new_film: c })} /></div>
+              <div className="flex items-center justify-between"><Label htmlFor="notif-replies">Replies to comments</Label><Switch id="notif-replies" checked={settings.notifications_comment_replies} onCheckedChange={(c) => handleSettingChange({ notifications_comment_replies: c })} /></div>
+              <div className="flex items-center justify-between"><Label htmlFor="notif-announcements">Platform announcements</Label><Switch id="notif-announcements" checked={settings.notifications_platform_announcements} onCheckedChange={(c) => handleSettingChange({ notifications_platform_announcements: c })} /></div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle>Privacy Control</CardTitle><CardDescription>Manage your account's privacy.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between"><Label htmlFor="privacy-public-profile">Public Profile</Label><Switch id="privacy-public-profile" checked={settings.profile_public} onCheckedChange={(c) => setSettings(s => ({ ...s, profile_public: c }))} /></div>
-              <div className="flex items-center justify-between"><Label htmlFor="privacy-allow-comments">Allow comments on my films</Label><Switch id="privacy-allow-comments" checked={settings.allow_comments} onCheckedChange={(c) => setSettings(s => ({ ...s, allow_comments: c }))} /></div>
+              <div className="flex items-center justify-between"><Label htmlFor="privacy-public-profile">Public Profile</Label><Switch id="privacy-public-profile" checked={settings.profile_public} onCheckedChange={(c) => handleSettingChange({ profile_public: c })} /></div>
+              <div className="flex items-center justify-between"><Label htmlFor="privacy-allow-comments">Allow comments on my films</Label><Switch id="privacy-allow-comments" checked={settings.allow_comments} onCheckedChange={(c) => handleSettingChange({ allow_comments: c })} /></div>
             </CardContent>
           </Card>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSaveChanges}>Save All Changes</Button>
-          </div>
 
           <Card>
             <CardHeader><CardTitle>Account Management</CardTitle><CardDescription>Update your account details.</CardDescription></CardHeader>
