@@ -15,6 +15,7 @@ import SearchResults from "@/pages/SearchResults";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 import { AuthProvider } from "@/context/AuthContext";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>

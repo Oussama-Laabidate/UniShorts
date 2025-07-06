@@ -11,7 +11,7 @@ export const Footer = () => {
         <Link to="/about" className="text-xs hover:underline underline-offset-4">
           About Us
         </Link>
-        <Link to="#" className="text-xs hover:underline underline-offset-4">
+        <Link to="/terms" className="text-xs hover:underline underline-offset-4">
           Terms of Service
         </Link>
         <Link to="/privacy" className="text-xs hover:underline underline-offset-4">
