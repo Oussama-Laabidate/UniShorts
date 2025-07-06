@@ -16,6 +16,7 @@ import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import ReportProblem from "@/pages/ReportProblem";
 import { AuthProvider } from "@/context/AuthContext";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/report-problem" element={<ReportProblem />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
