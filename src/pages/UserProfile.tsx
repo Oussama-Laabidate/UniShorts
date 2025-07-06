@@ -31,6 +31,7 @@ type Film = {
   thumbnail_url: string;
   duration_seconds: number;
   category: { name: string };
+  status: 'pending' | 'approved' | 'rejected'; // إضافة حالة الفيلم
 };
 
 type ListItem = {
@@ -63,6 +64,15 @@ const FilmListItem = ({ item, onRemove, showMarkAsWatched }: { item: ListItem, o
           <Clock className="w-4 h-4" />
           <span>{formatDuration(item.film.duration_seconds)}</span>
         </div>
+        {item.film.status && (
+          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+            item.film.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
+            item.film.status === 'approved' ? 'bg-green-500/20 text-green-500' :
+            'bg-red-500/20 text-red-500'
+          }`}>
+            {item.film.status.charAt(0).toUpperCase() + item.film.status.slice(1)}
+          </span>
+        )}
       </CardHeader>
       <CardContent>
         {showMarkAsWatched && (
@@ -75,7 +85,7 @@ const FilmListItem = ({ item, onRemove, showMarkAsWatched }: { item: ListItem, o
   );
 };
 
-const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 'watch_later' }) => {
+const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 'watch_later' | 'my_films' }) => {
   const [items, setItems] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState('created_at-desc');
@@ -85,17 +95,26 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
     const [sortField, sortDirection] = sort.split('-');
     const isAscending = sortDirection === 'asc';
 
-    let query = supabase
-      .from(listType)
-      .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, category:categories(name))')
-      .eq('user_id', user.id);
-
-    if (sortField.startsWith('films.')) {
-      const foreignTable = sortField.split('.')[0];
-      const foreignColumn = sortField.split('.')[1];
-      query = query.order(foreignColumn, { foreignTable: foreignTable, ascending: isAscending });
+    let query;
+    if (listType === 'my_films') {
+      query = supabase
+        .from('films')
+        .select('id, created_at, title, synopsis, thumbnail_url, duration_seconds, category:categories(name), status')
+        .eq('director_id', user.id)
+        .order(sortField, { ascending: isAscending });
     } else {
-      query = query.order(sortField, { ascending: isAscending });
+      query = supabase
+        .from(listType)
+        .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, category:categories(name))')
+        .eq('user_id', user.id);
+
+      if (sortField.startsWith('films.')) {
+        const foreignTable = sortField.split('.')[0];
+        const foreignColumn = sortField.split('.')[1];
+        query = query.order(foreignColumn, { foreignTable: foreignTable, ascending: isAscending });
+      } else {
+        query = query.order(sortField, { ascending: isAscending });
+      }
     }
 
     const { data, error } = await query;
@@ -104,7 +123,8 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
       showError(`Failed to load ${listType.replace('_', ' ')} list.`);
       console.error(error);
     } else {
-      setItems(data as any);
+      // For 'my_films', the data structure is directly films, not nested under 'film'
+      setItems(listType === 'my_films' ? data.map((film: any) => ({ created_at: film.created_at, film: film })) : data as any);
     }
     setLoading(false);
   }, [user, listType, sort]);
@@ -115,9 +135,9 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
 
   const handleRemove = async (filmId: string) => {
     const { error } = await supabase
-      .from(listType)
+      .from(listType === 'my_films' ? 'films' : listType) // إذا كانت أفلامي، احذف من جدول الأفلام
       .delete()
-      .match({ user_id: user.id, film_id: filmId });
+      .match(listType === 'my_films' ? { id: filmId, director_id: user.id } : { user_id: user.id, film_id: filmId });
 
     if (error) {
       showError('Failed to remove film from list.');
@@ -148,8 +168,12 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
             <SelectItem value="created_at-asc">Date Added (Oldest)</SelectItem>
             <SelectItem value="films.duration_seconds-desc">Duration (Longest)</SelectItem>
             <SelectItem value="films.duration_seconds-asc">Duration (Shortest)</SelectItem>
-            <SelectItem value="categories.name-asc">Genre (A-Z)</SelectItem>
-            <SelectItem value="categories.name-desc">Genre (Z-A)</SelectItem>
+            {listType !== 'my_films' && ( // إخفاء خيارات الفرز حسب الفئة لـ 'أفلامي'
+              <>
+                <SelectItem value="categories.name-asc">Genre (A-Z)</SelectItem>
+                <SelectItem value="categories.name-desc">Genre (Z-A)</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -248,10 +272,7 @@ const UserProfile = () => {
                 <TabsTrigger value="watch_later"><Clock className="w-4 h-4 mr-2" />Watch Later</TabsTrigger>
               </TabsList>
               <TabsContent value="films" className="mt-6">
-                <Card>
-                  <CardHeader><CardTitle>My Films</CardTitle><CardDescription>A collection of your uploaded short films.</CardDescription></CardHeader>
-                  <CardContent className="text-center text-muted-foreground py-12"><p>You haven't uploaded any films yet.</p></CardContent>
-                </Card>
+                <FilmList user={user} listType="my_films" />
               </TabsContent>
               <TabsContent value="favorites" className="mt-6"><FilmList user={user} listType="favorites" /></TabsContent>
               <TabsContent value="watch_later" className="mt-6"><FilmList user={user} listType="watch_later" /></TabsContent>
