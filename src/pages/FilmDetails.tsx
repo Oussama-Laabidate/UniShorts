@@ -24,7 +24,6 @@ type Film = {
   id: string;
   title: string;
   duration_seconds: number;
-  genre: string;
   language: string;
   release_date: string;
   synopsis: string;
@@ -32,6 +31,7 @@ type Film = {
   video_url: string;
   thumbnail_url: string;
   director: Profile;
+  category: { name: string };
 };
 
 const FilmDetails = () => {
@@ -58,7 +58,7 @@ const FilmDetails = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('films')
-        .select('*, director:profiles(*)')
+        .select('*, director:profiles(*), category:categories(*)')
         .eq('id', id)
         .single();
 
@@ -129,7 +129,7 @@ const FilmDetails = () => {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>{film.release_date ? new Date(film.release_date).getFullYear() : 'N/A'}</span><span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
                 <span>{formatDuration(film.duration_seconds)}</span><span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-                <span>{film.genre || 'N/A'}</span>
+                <span>{film.category?.name || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-4">
                 <Button variant={isFavorite ? 'default' : 'secondary'} onClick={() => toggleList('favorites', isFavorite, setIsFavorite, 'Favorites')}><Heart className="mr-2 h-4 w-4" /> Favorite</Button>

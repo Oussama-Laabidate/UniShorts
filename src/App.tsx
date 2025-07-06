@@ -19,6 +19,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
 import AdminFilms from "./pages/admin/Films";
+import AdminCategories from "./pages/admin/Categories";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="films" element={<AdminFilms />} />
+              <Route path="categories" element={<AdminCategories />} />
             </Route>
 
             {/* Catch-all Not Found Route */}

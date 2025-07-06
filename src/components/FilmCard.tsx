@@ -10,7 +10,7 @@ type Film = {
   synopsis: string;
   thumbnail_url: string;
   duration_seconds: number;
-  genre: string;
+  category: { name: string };
 };
 
 const formatDuration = (seconds: number) => {
@@ -33,7 +33,7 @@ export const FilmCard = ({ film }: { film: Film }) => {
       </Link>
       <CardHeader>
         <CardTitle className="truncate text-lg">{film.title}</CardTitle>
-        <Badge variant="outline" className="w-fit">{film.genre}</Badge>
+        {film.category && <Badge variant="outline" className="w-fit">{film.category.name}</Badge>}
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-3">

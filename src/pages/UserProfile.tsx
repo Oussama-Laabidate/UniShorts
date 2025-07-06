@@ -30,7 +30,7 @@ type Film = {
   synopsis: string;
   thumbnail_url: string;
   duration_seconds: number;
-  genre: string;
+  category: { name: string };
 };
 
 type ListItem = {
@@ -87,12 +87,13 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
 
     let query = supabase
       .from(listType)
-      .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, genre)')
+      .select('created_at, film:films!inner(id, title, synopsis, thumbnail_url, duration_seconds, category:categories(name))')
       .eq('user_id', user.id);
 
     if (sortField.startsWith('films.')) {
+      const foreignTable = sortField.split('.')[0];
       const foreignColumn = sortField.split('.')[1];
-      query = query.order(foreignColumn, { foreignTable: 'films', ascending: isAscending });
+      query = query.order(foreignColumn, { foreignTable: foreignTable, ascending: isAscending });
     } else {
       query = query.order(sortField, { ascending: isAscending });
     }
@@ -147,8 +148,8 @@ const FilmList = ({ user, listType }: { user: AuthUser, listType: 'favorites' | 
             <SelectItem value="created_at-asc">Date Added (Oldest)</SelectItem>
             <SelectItem value="films.duration_seconds-desc">Duration (Longest)</SelectItem>
             <SelectItem value="films.duration_seconds-asc">Duration (Shortest)</SelectItem>
-            <SelectItem value="films.genre-asc">Genre (A-Z)</SelectItem>
-            <SelectItem value="films.genre-desc">Genre (Z-A)</SelectItem>
+            <SelectItem value="categories.name-asc">Genre (A-Z)</SelectItem>
+            <SelectItem value="categories.name-desc">Genre (Z-A)</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -5,7 +5,7 @@ import { Footer } from '@/components/Footer';
 import { StatCard } from '../../components/admin/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Film, MessageSquare, Clock } from 'lucide-react';
+import { Users, Film, MessageSquare, Clock, Folder } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -60,9 +60,8 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-4">
                   <Button asChild><Link to="/admin/films">Manage Films</Link></Button>
-                  <Button asChild variant="secondary"><Link to="#">Moderate Comments</Link></Button>
+                  <Button asChild><Link to="/admin/categories">Manage Categories</Link></Button>
                   <Button asChild variant="secondary"><Link to="/admin/users">Manage Users</Link></Button>
-                  <Button asChild variant="secondary"><Link to="#">View Analytics</Link></Button>
                 </CardContent>
               </Card>
               <Card>

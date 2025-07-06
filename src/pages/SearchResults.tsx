@@ -5,7 +5,6 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FilmCard } from '@/components/FilmCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +15,7 @@ type Film = {
   synopsis: string;
   thumbnail_url: string;
   duration_seconds: number;
-  genre: string;
+  category: { name: string };
 };
 
 const SearchResults = () => {
@@ -34,16 +33,18 @@ const SearchResults = () => {
       }
 
       setLoading(true);
+      // Note: Searching on category name is complex and will be added later.
+      // For now, search works on title and synopsis.
       const { data, error } = await supabase
         .from('films')
-        .select('id, title, synopsis, thumbnail_url, duration_seconds, genre')
-        .or(`title.ilike.%${query}%,synopsis.ilike.%${query}%,genre.ilike.%${query}%`);
+        .select('id, title, synopsis, thumbnail_url, duration_seconds, category:categories(name)')
+        .or(`title.ilike.%${query}%,synopsis.ilike.%${query}%`);
 
       if (error) {
         console.error('Error fetching search results:', error);
         setResults([]);
       } else {
-        setResults(data as Film[]);
+        setResults(data as any[]);
       }
       setLoading(false);
     };

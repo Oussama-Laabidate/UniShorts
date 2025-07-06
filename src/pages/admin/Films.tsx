@@ -17,11 +17,13 @@ type FilmWithDirector = {
   created_at: string;
   title: string;
   duration_seconds: number;
-  genre: string;
   status: 'pending' | 'approved' | 'rejected';
   director: {
     first_name: string;
     last_name: string;
+  } | null;
+  category: {
+    name: string;
   } | null;
 };
 
@@ -36,7 +38,7 @@ const Films = () => {
     try {
       const { data, error } = await supabase
         .from('films')
-        .select('id, created_at, title, duration_seconds, genre, status, director:profiles(first_name, last_name)');
+        .select('id, created_at, title, duration_seconds, status, director:profiles(first_name, last_name), category:categories(name)');
       
       if (error) throw error;
       setFilms(data as any);
@@ -145,7 +147,7 @@ const Films = () => {
                     <TableRow key={film.id}>
                       <TableCell className="font-medium">{film.title}</TableCell>
                       <TableCell>{film.director ? `${film.director.first_name} ${film.director.last_name}` : 'N/A'}</TableCell>
-                      <TableCell>{film.genre}</TableCell>
+                      <TableCell>{film.category?.name}</TableCell>
                       <TableCell>{formatDuration(film.duration_seconds)}</TableCell>
                       <TableCell><Badge variant={getStatusBadgeVariant(film.status)}>{film.status}</Badge></TableCell>
                       <TableCell>{new Date(film.created_at).toLocaleDateString()}</TableCell>
