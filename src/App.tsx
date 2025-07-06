@@ -14,6 +14,7 @@ import FilmDetails from "@/pages/FilmDetails";
 import SearchResults from "@/pages/SearchResults";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import { AuthProvider } from "@/context/AuthContext";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/search" element={<SearchResults />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
