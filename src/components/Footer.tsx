@@ -23,6 +23,9 @@ export const Footer = () => {
         <Link to="/report-problem" className="text-xs hover:underline underline-offset-4">
           Report a Problem
         </Link>
+        <Link to="/faq" className="text-xs hover:underline underline-offset-4">
+          FAQ
+        </Link>
         <Link to="/donate" className="text-xs hover:underline underline-offset-4 font-semibold text-primary">
           Support Us
         </Link>
