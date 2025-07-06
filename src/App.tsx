@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
 import AdminFilms from "./pages/admin/Films";
 import AdminCategories from "./pages/admin/Categories";
+import AdminAnalytics from "./pages/admin/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="users" element={<AdminUsers />} />
               <Route path="films" element={<AdminFilms />} />
               <Route path="categories" element={<AdminCategories />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
 
             {/* Catch-all Not Found Route */}

@@ -81,7 +81,7 @@ const AdminDashboard = () => {
                   <CardDescription>Visual overview of platform data.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Graphs and charts coming soon.</p>
+                   <Button asChild><Link to="/admin/analytics">View Full Analytics</Link></Button>
                 </CardContent>
               </Card>
             </div>
