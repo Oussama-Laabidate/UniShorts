@@ -23,6 +23,9 @@ export const Footer = () => {
         <Link to="/report-problem" className="text-xs hover:underline underline-offset-4">
           Report a Problem
         </Link>
+        <Link to="/donate" className="text-xs hover:underline underline-offset-4 font-semibold text-primary">
+          Support Us
+        </Link>
       </nav>
       <div className="sm:ml-4 mt-4 sm:mt-0">
         <MadeWithDyad />
