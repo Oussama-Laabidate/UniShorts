@@ -17,12 +17,13 @@ import { useAuth } from "@/context/AuthContext"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { User, LogOut, Settings, Upload } from "lucide-react"
+import { User, LogOut, Settings, Upload, LayoutDashboard } from "lucide-react"
 
 type Profile = {
   first_name: string;
   last_name: string;
   profile_picture_url: string;
+  role: string; // إضافة الدور هنا
 };
 
 export function UserNav() {
@@ -34,7 +35,7 @@ export function UserNav() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('first_name, last_name, profile_picture_url')
+        .select('first_name, last_name, profile_picture_url, role') // جلب الدور أيضاً
         .eq('id', user.id)
         .single();
       setProfile(data);
@@ -88,6 +89,14 @@ export function UserNav() {
               <span>Settings</span>
             </Link>
           </DropdownMenuItem>
+          {profile?.role === 'admin' && (
+            <DropdownMenuItem asChild>
+              <Link to="/admin/dashboard">
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
