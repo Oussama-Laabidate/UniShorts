@@ -19,6 +19,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import ReportProblem from "@/pages/ReportProblem";
 import Donation from "@/pages/Donation";
 import FAQ from "@/pages/FAQ";
+import UploadFilm from "@/pages/UploadFilm";
 import { AuthProvider } from "@/context/AuthContext";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/report-problem" element={<ReportProblem />} />
             <Route path="/donate" element={<Donation />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/upload" element={<UploadFilm />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>

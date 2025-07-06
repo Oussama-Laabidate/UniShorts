@@ -17,7 +17,7 @@ import { useAuth } from "@/context/AuthContext"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { User, LogOut, Settings } from "lucide-react"
+import { User, LogOut, Settings, Upload } from "lucide-react"
 
 type Profile = {
   first_name: string;
@@ -74,6 +74,12 @@ export function UserNav() {
             <Link to="/profile">
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/upload">
+              <Upload className="mr-2 h-4 w-4" />
+              <span>Upload Film</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
