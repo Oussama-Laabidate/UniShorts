@@ -35,8 +35,11 @@ const SignUp = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.endsWith('.edu')) {
-      showError("Please use a valid university email address ending in .edu");
+    const allowedDomains = ['.edu', '.ac.uk', '.edu.au', '.ca', '.fr', '.de', '.jp', '.cn', '.in', '.ma']; // أضف هنا أي نطاقات جامعية أخرى تحتاجها
+    const isUniversityEmail = allowedDomains.some(domain => email.endsWith(domain));
+
+    if (!isUniversityEmail) {
+      showError("Please use a valid university email address (e.g., ending in .edu, .ac.uk, .ma).");
       return;
     }
 
