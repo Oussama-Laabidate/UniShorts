@@ -4,8 +4,11 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Clapperboard, Share2, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
+  const { session } = useAuth();
+
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <Header />
@@ -22,12 +25,25 @@ const Index = () => {
                 </p>
               </div>
               <div className="space-x-4 pt-4">
-                <Button asChild size="lg">
-                  <Link to="/signup">Join Now</Link>
-                </Button>
-                <Button variant="secondary" size="lg" asChild>
-                  <Link to="/explore">Explore Films</Link>
-                </Button>
+                {session ? (
+                  <>
+                    <Button asChild size="lg">
+                      <Link to="/profile">My Profile</Link>
+                    </Button>
+                    <Button variant="secondary" size="lg" asChild>
+                      <Link to="/explore">Explore Films</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild size="lg">
+                      <Link to="/signup">Join Now</Link>
+                    </Button>
+                    <Button variant="secondary" size="lg" asChild>
+                      <Link to="/explore">Explore Films</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
