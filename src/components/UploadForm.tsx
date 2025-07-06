@@ -70,7 +70,6 @@ export const UploadForm = () => {
       showLoading('Saving film details...');
 
       // 3. Insert into database
-      // director_id سيتم تعيينه تلقائيًا بواسطة trigger في قاعدة البيانات
       const { error: dbError } = await supabase.from('films').insert({
         title,
         synopsis,
@@ -81,6 +80,7 @@ export const UploadForm = () => {
         tags: tags.split(',').map(tag => tag.trim()),
         thumbnail_url: thumbnailUrl,
         video_url: videoUrl,
+        director_id: user.id, // إعادة إضافة director_id هنا
         status: 'pending',
       });
 
