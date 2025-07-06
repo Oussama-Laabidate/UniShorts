@@ -121,7 +121,24 @@ const FilmDetails = () => {
     <div className="flex flex-col min-h-dvh bg-background">
       <Header />
       <main className="flex-1">
-        <div className="bg-black"><div className="container mx-auto aspect-video"><div className="w-full h-full bg-slate-900 flex items-center justify-center text-white">{film.video_url ? <p>Video Player Placeholder</p> : <p>Video not available.</p>}</div></div></div>
+        <div className="bg-black">
+          <div className="container mx-auto aspect-video">
+            {film.video_url ? (
+              <video
+                src={film.video_url}
+                poster={film.thumbnail_url}
+                controls
+                className="w-full h-full object-contain"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white">
+                <p>Video not available.</p>
+              </div>
+            )}
+          </div>
+        </div>
         <div className="container py-8 md:py-12">
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             <div className="md:col-span-2 space-y-8">
